@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burgundy Waterfall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Фиксированное меню -->
+  <nav>
+    <ul>
+      <li><a href="#rules">Правила</a></li>
+      <li><a href="#applications">Заявки</a></li>
+    </ul>
+    <div id="authContainer">
+      <button id="loginButton" class="auth-button">Войти</button>
+      <button id="logoutButton" class="auth-button" style="display: none;">Выйти</button>
+    </div>
+  </nav>
+
+  <!-- Хедер с фоновым изображением -->
+  <header>
+    <div class="header-content">
+      <h1>Burgundy Waterfall</h1>
+      <p>Погрузитесь в атмосферу утонченной романтики</p>
+    </div>
+  </header>
+
+  <!-- Основной контент -->
+  <main>
+    <!-- Раздел с правилами чата -->
+    <section id="rules">
+      <h2>Правила Чата</h2>
+      <ul id="rulesList">
+        <li class="rule-item"><p>Загрузка правил...</p></li>
+      </ul>
+      <div id="addRuleContainer" style="margin-top: 20px; display: none;">
+        <input type="text" id="new-rule" placeholder="Введите новое правило" style="width:100%; padding:12px; margin-bottom:10px; border-radius:5px; border:1px solid #555; background:#2a2a2a; color:#f1f1f1;">
+        <button id="addRuleButton">Добавить правило</button>
+      </div>
+    </section>
+
+    <!-- Раздел с заявками -->
+    <section id="applications">
+      <h2>Заявка на вступление</h2>
+      <form id="applicationForm" class="application-form">
+        <label for="role">На какую роль?</label>
+        <input type="text" id="role" name="role" required placeholder="Введите желаемую роль">
+        <label for="story">Из какой истории персонаж?</label>
+        <input type="text" id="story" name="story" required placeholder="Укажите историю персонажа">
+        <button type="submit">Отправить заявку</button>
+      </form>
+      <div class="applications-container" id="applicationsContainer">
+        <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Ожидающие заявки</h2>
+        <div id="pendingApplications"></div>
+      </div>
+      <div class="applications-container" id="approvedContainer">
+        <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Одобренные заявки</h2>
+        <div id="approvedApplications"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Burgundy Waterfall. Все права защищены.</p>
+  </footer>
+
+  <!-- Модальное окно для авторизации админа -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h2 style="color:#D4AF37; margin-bottom:15px; text-align:center;">Админ Вход</h2>
+      <input type="email" id="adminEmail" placeholder="Email" required>
+      <input type="password" id="adminPassword" placeholder="Пароль" required>
+      <button id="modalLoginButton">Войти</button>
+    </div>
+  </div>
+
+  <!-- Подключение скрипта -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
