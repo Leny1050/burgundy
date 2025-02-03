@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <!-- Подключение Google reCAPTCHA -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
   <!-- Фиксированное меню -->
@@ -52,6 +54,8 @@
         <input type="text" id="role" name="role" required placeholder="Введите желаемую роль">
         <label for="story">Из какой истории персонаж?</label>
         <input type="text" id="story" name="story" required placeholder="Укажите историю персонажа">
+        <!-- Google reCAPTCHA -->
+        <div class="g-recaptcha" data-sitekey="6Ld30MsqAAAAAGqA2cNks7A9wrUHqVO16vB3dVQF"></div>
         <button type="submit">Отправить заявку</button>
       </form>
       <div class="applications-container" id="applicationsContainer">
