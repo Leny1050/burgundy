@@ -96,6 +96,20 @@ logoutButton.addEventListener("click", () => {
   });
 });
 
+// Функция для добавления задержки между отправкой заявок
+let lastSubmissionTime = 0;
+const submitDelay = 5000; // Задержка 5 секунд
+
+// Функция для проверки капчи
+function verifyCaptcha() {
+  const recaptchaResponse = grecaptcha.getResponse();
+  if (!recaptchaResponse) {
+    alert("Пожалуйста, подтвердите, что вы не робот.");
+    return false;
+  }
+  return true;
+}
+
 // Загрузка правил из Firestore
 async function loadRules() {
   const querySnapshot = await getDocs(collection(db, "rules"));
@@ -193,9 +207,24 @@ async function loadApplications() {
 // Обработчик формы заявки
 document.getElementById('applicationForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  // Проверка капчи
+  if (!verifyCaptcha()) {
+    return;
+  }
+
+  // Проверка задержки
+  const currentTime = Date.now();
+  if (currentTime - lastSubmissionTime < submitDelay) {
+    alert("Пожалуйста, подождите немного перед отправкой следующей заявки.");
+    return;
+  }
+  lastSubmissionTime = currentTime;
+
   const roleInput = document.getElementById('role');
   const storyInput = document.getElementById('story');
   if (!roleInput || !storyInput) return;
+
   try {
     await addDoc(collection(db, "applications"), {
       role: roleInput.value.trim(),
@@ -210,10 +239,6 @@ document.getElementById('applicationForm').addEventListener('submit', async (e) 
     alert("Ошибка при отправке заявки: " + e.message);
   }
 });
-
-// Функция для добавления задержки между отправкой заявок
-let lastSubmissionTime = 0;
-const submitDelay = 5000; // Задержка 5 секунд
 
 // Функция для одобрения заявки
 async function approveApplication(id) {
