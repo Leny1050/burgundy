@@ -146,6 +146,7 @@ async function addRule() {
       await addDoc(collection(db, "rules"), { text: newRuleText });
       newRuleInput.value = "";
       loadRules();
+      showSnackbar("Правило добавлено");
     } catch (e) {
       alert("Ошибка при добавлении правила: " + e.message);
     }
@@ -161,6 +162,7 @@ async function deleteRule(id) {
   try {
     await deleteDoc(doc(db, "rules", id));
     loadRules();
+    showSnackbar("Правило удалено");
   } catch (e) {
     alert("Ошибка при удалении правила: " + e.message);
   }
