@@ -211,6 +211,10 @@ document.getElementById('applicationForm').addEventListener('submit', async (e) 
   }
 });
 
+// Функция для добавления задержки между отправкой заявок
+let lastSubmissionTime = 0;
+const submitDelay = 5000; // Задержка 5 секунд
+
 // Функция для одобрения заявки
 async function approveApplication(id) {
   try {
