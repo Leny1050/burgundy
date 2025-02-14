@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Burgundy Waterfall</title>
+  <!-- Подключение шрифтов и стили CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <!-- Подключение Google reCAPTCHA -->
+
+  <!-- Подключение Google reCAPTCHA (обязательно для капчи) -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
@@ -17,7 +19,6 @@
     <ul>
       <li><a href="#rules">Правила</a></li>
       <li><a href="#applications">Заявки</a></li>
-      <li><a href="mediaGallery">Медия</li>
     </ul>
     <div id="authContainer">
       <button id="loginButton" class="auth-button">Войти</button>
@@ -29,7 +30,7 @@
   <header>
     <div class="header-content">
       <h1>Burgundy Waterfall</h1>
-      <p>Заходи к нам в флуд, тебе всегда рады</p>
+      <p>Погрузитесь в атмосферу утонченной романтики</p>
     </div>
   </header>
 
@@ -41,8 +42,14 @@
       <ul id="rulesList">
         <li class="rule-item"><p>Загрузка правил...</p></li>
       </ul>
+      <!-- Блок для добавления нового правила (только для админа) -->
       <div id="addRuleContainer" style="margin-top: 20px; display: none;">
-        <input type="text" id="new-rule" placeholder="Введите новое правило" style="width:100%; padding:12px; margin-bottom:10px; border-radius:5px; border:1px solid #555; background:#2a2a2a; color:#f1f1f1;">
+        <input 
+          type="text" 
+          id="new-rule" 
+          placeholder="Введите новое правило"
+          style="width:100%; padding:12px; margin-bottom:10px; border-radius:5px; border:1px solid #555; background:#2a2a2a; color:#f1f1f1;"
+        >
         <button id="addRuleButton">Добавить правило</button>
       </div>
     </section>
@@ -52,9 +59,21 @@
       <h2>Заявка на вступление</h2>
       <form id="applicationForm" class="application-form">
         <label for="role">На какую роль?</label>
-        <input type="text" id="role" name="role" required placeholder="Введите желаемую роль">
+        <input 
+          type="text" 
+          id="role" 
+          name="role" 
+          required 
+          placeholder="Введите желаемую роль"
+        >
         <label for="story">Из какой истории персонаж?</label>
-        <input type="text" id="story" name="story" required placeholder="Укажите историю персонажа">
+        <input 
+          type="text" 
+          id="story" 
+          name="story" 
+          required 
+          placeholder="Укажите историю персонажа"
+        >
         <!-- Google reCAPTCHA -->
         <div class="g-recaptcha" data-sitekey="6Ld30MsqAAAAAGqA2cNks7A9wrUHqVO16vB3dVQF"></div>
         <button type="submit">Отправить заявку</button>
@@ -74,16 +93,24 @@
       <h2>Загрузка медиафайлов</h2>
       <form id="uploadForm" enctype="multipart/form-data">
         <label for="mediaFile">Выберите файл</label>
-        <input type="file" id="mediaFile" name="mediaFile" accept="image/*,video/*" required>
+        <input 
+          type="file" 
+          id="mediaFile" 
+          name="mediaFile" 
+          accept="image/*,video/*" 
+          required
+        >
         <button type="submit">Загрузить</button>
       </form>
       <div id="uploadStatus"></div>
     </section>
+
+    <!-- Раздел для галереи медиафайлов (виден всем пользователям) -->
+    <section id="mediaGallery">
+      <h2>Галерея медиафайлов</h2>
+      <!-- Загруженные фото/видео будут появляться здесь скриптом -->
+    </section>
   </main>
-  
-   <section id="mediaGallery">
-  <!-- Сюда будут добавляться фото/видео из Firestore -->
-   </section>
 
   <!-- Футер -->
   <footer>
@@ -105,6 +132,7 @@
   <div id="snackbar"></div>
 
   <!-- Подключение скрипта -->
+  <!-- ВАЖНО: используйте type="module", чтобы работал import -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
