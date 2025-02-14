@@ -1,24 +1,25 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  getDocs, 
-  deleteDoc, 
-  doc, 
-  updateDoc 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
 } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-storage.js";
 
 // =======================
@@ -28,7 +29,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAv4Oet78KIcx_S4l7dlaxKUZ2pfZ5z2iI",
   authDomain: "burgundy-waterfall.firebaseapp.com",
   projectId: "burgundy-waterfall",
-  storageBucket: "burgundy-waterfall.firebasestorage.app", // Проверьте, что здесь корректное значение
+  storageBucket: "burgundy-waterfall.firebasestorage.app", // Проверьте правильность этого поля!
   messagingSenderId: "710848092514",
   appId: "1:710848092514:web:130d7467b1ee8337cff43b",
   measurementId: "G-SJM886XS31"
@@ -65,23 +66,42 @@ const uploadForm = document.getElementById("uploadForm");
 const mediaFileInput = document.getElementById("mediaFile");
 const uploadStatus = document.getElementById("uploadStatus");
 
+// ==============================
+// РАЗДЕЛ ДЛЯ ОТОБРАЖЕНИЯ МЕДИА
+// ==============================
+const mediaGallery = document.getElementById("mediaGallery"); 
+// Предполагается, что в HTML есть: <section id="mediaGallery"></section>
+
 // =============================
-// ЭЛЕМЕНТЫ ДЛЯ РАБОТЫ С ПРАВИЛАМИ
+// РАБОТА С ПРАВИЛАМИ
 // =============================
 const addRuleButton = document.getElementById("addRuleButton");
 
 // ================================
-// ЭЛЕМЕНТЫ ДЛЯ РАБОТЫ С ЗАЯВКАМИ
+// РАБОТА С ЗАЯВКАМИ
 // ================================
 const applicationForm = document.getElementById("applicationForm");
 const pendingApplicationsContainer = document.getElementById('pendingApplications');
 const approvedApplicationsContainer = document.getElementById('approvedApplications');
 
 // =======================
+// ФУНКЦИЯ: показать snackbar
+// =======================
+function showSnackbar(message) {
+  const snackbar = document.getElementById("snackbar");
+  if (!snackbar) return;
+  snackbar.textContent = message;
+  snackbar.className = "show";
+  setTimeout(() => {
+    snackbar.className = "";
+  }, 3000);
+}
+
+// =======================
 // АВТОРИЗАЦИЯ (логин/логаут)
 // =======================
 
-// Открытие модального окна по клику на "Войти"
+// Открытие модального окна «Войти»
 loginButton.addEventListener("click", () => {
   loginModal.style.display = "block";
 });
@@ -98,7 +118,7 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// Авторизация через модальное окно
+// Обработчик логина (через модальное окно)
 modalLoginButton.addEventListener("click", () => {
   const email = document.getElementById("adminEmail").value.trim();
   const password = document.getElementById("adminPassword").value.trim();
@@ -131,79 +151,171 @@ logoutButton.addEventListener("click", () => {
   });
 });
 
-// ===================================
+// =======================
 // ОТСЛЕЖИВАНИЕ АУТЕНТИФИКАЦИИ
-// ===================================
+// =======================
 onAuthStateChanged(auth, (user) => {
   const addRuleContainer = document.getElementById('addRuleContainer');
 
   if (user) {
-    // Авторизован
+    // Если есть пользователь
     loginButton.style.display = "none";
     logoutButton.style.display = "inline-block";
-
-    if (addRuleContainer) {
-      addRuleContainer.style.display = 'block';
-    }
-
-    // Если пользователь - админ, показываем раздел загрузки медиа
+    if (addRuleContainer) addRuleContainer.style.display = 'block';
+    
+    // Если это админ — показываем форму загрузки
     if (allowedEmails.includes(user.email)) {
-      if (mediaUploadSection) {
-        mediaUploadSection.style.display = "block";
-      }
+      if (mediaUploadSection) mediaUploadSection.style.display = "block";
     } else {
-      if (mediaUploadSection) {
-        mediaUploadSection.style.display = "none";
-      }
+      if (mediaUploadSection) mediaUploadSection.style.display = "none";
     }
   } else {
-    // Не авторизован
+    // Если пользователя нет
     loginButton.style.display = "inline-block";
     logoutButton.style.display = "none";
-
-    if (addRuleContainer) {
-      addRuleContainer.style.display = 'none';
-    }
-
-    // Скрываем раздел загрузки медиа
-    if (mediaUploadSection) {
-      mediaUploadSection.style.display = "none";
-    }
+    if (addRuleContainer) addRuleContainer.style.display = 'none';
+    // Скрываем секцию загрузки для неадминов
+    if (mediaUploadSection) mediaUploadSection.style.display = "none";
   }
 
-  // В любом случае подгружаем правила и заявки
+  // В любом случае подгружаем правила, заявки и медиа
   loadRules();
   loadApplications();
+  loadMedia(); 
 });
 
-// ==================================
-// ФУНКЦИЯ ЗАГРУЗКИ МЕДИАФАЙЛОВ
-// ==================================
+// ==============================
+// ЗАГРУЗКА МЕДИА (ФОТО/ВИДЕО)
+// ==============================
 if (uploadForm) {
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const mediaFile = mediaFileInput.files[0];
     if (!mediaFile) return;
 
-    // Ссылка на место хранения в Firebase Storage
-    const fileRef = ref(storage, "media/" + mediaFile.name);
+    // Генерируем уникальное имя (чтобы не затирать файлы с одинаковыми именами)
+    // например, добавим timestamp
+    const uniqueName = Date.now() + "_" + mediaFile.name;
+
+    // Определяем путь в Storage
+    const fileRef = ref(storage, "media/" + uniqueName);
 
     try {
       // Загружаем файл
-      const uploadResult = await uploadBytes(fileRef, mediaFile);
-      const downloadURL = await getDownloadURL(uploadResult.ref);
+      await uploadBytes(fileRef, mediaFile);
+      const downloadURL = await getDownloadURL(fileRef);
 
-      // Отображаем ссылку на загруженный файл
+      // Определим тип файла (image/video) по MIME-типу (mediaFile.type)
+      // Пример: "image/png", "video/mp4"
+      let fileType = "image";
+      if (mediaFile.type.startsWith("video")) {
+        fileType = "video";
+      }
+
+      // Сохраняем запись о файле в Firestore (коллекция media)
+      // Храним url, тип, storagePath (для будущего удаления), имя
+      await addDoc(collection(db, "media"), {
+        url: downloadURL,
+        type: fileType,
+        storagePath: "media/" + uniqueName, 
+        originalName: mediaFile.name,
+        createdAt: Date.now()
+      });
+
       uploadStatus.textContent = `Файл загружен: ${downloadURL}`;
       showSnackbar("Файл успешно загружен!");
+
+      // Обновим галерею
+      loadMedia();
     } catch (error) {
       alert("Ошибка при загрузке файла: " + error.message);
     }
   });
 }
 
+// ==============================
+// ЗАГРУЗКА СПИСКА МЕДИА И ОТОБРАЖЕНИЕ
+// ==============================
+async function loadMedia() {
+  if (!mediaGallery) return;
+
+  // Очищаем галерею
+  mediaGallery.innerHTML = "";
+
+  try {
+    const snapshot = await getDocs(collection(db, "media"));
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const docId = docSnap.id;
+
+      // Создаём контейнер для отдельного элемента
+      const mediaItem = document.createElement("div");
+      mediaItem.classList.add("media-item");
+
+      // Проверяем, это фото или видео
+      if (data.type === "video") {
+        const video = document.createElement("video");
+        video.src = data.url;
+        video.controls = true;
+        video.width = 320;
+        video.height = 240;
+        mediaItem.appendChild(video);
+      } else {
+        // По умолчанию считаем "image"
+        const img = document.createElement("img");
+        img.src = data.url;
+        img.alt = data.originalName || "Загруженное изображение";
+        img.width = 320; 
+        mediaItem.appendChild(img);
+      }
+
+      // Название файла
+      const fileName = document.createElement("p");
+      fileName.textContent = data.originalName;
+      mediaItem.appendChild(fileName);
+
+      // Если текущий пользователь — админ, показываем кнопку «Удалить»
+      const user = auth.currentUser;
+      if (user && allowedEmails.includes(user.email)) {
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Удалить";
+        deleteBtn.addEventListener("click", () => {
+          // Удаляем из Firestore и из Storage
+          deleteMedia(docId, data.storagePath);
+        });
+        mediaItem.appendChild(deleteBtn);
+      }
+
+      // Добавляем элемент на страницу
+      mediaGallery.appendChild(mediaItem);
+    });
+  } catch (err) {
+    console.error("Ошибка при загрузке медиа: ", err);
+  }
+}
+
+// ===========================
+// УДАЛЕНИЕ МЕДИА (админ)
+// ===========================
+async function deleteMedia(docId, storagePath) {
+  try {
+    // Удаляем файл из Storage
+    const fileRef = ref(storage, storagePath);
+    await deleteObject(fileRef);
+
+    // Удаляем документ из Firestore
+    await deleteDoc(doc(db, "media", docId));
+
+    showSnackbar("Медиафайл удалён");
+    // Обновим галерею
+    loadMedia();
+  } catch (error) {
+    alert("Ошибка при удалении медиа: " + error.message);
+  }
+}
+
 // =======================
-// ДОБАВЛЕНИЕ ПРАВИЛ
+// РАБОТА С ПРАВИЛАМИ
 // =======================
 async function addRule() {
   const newRuleInput = document.getElementById('new-rule');
@@ -224,21 +336,16 @@ async function addRule() {
   }
 }
 
-// Клик по кнопке "Добавить правило"
 if (addRuleButton) {
   addRuleButton.addEventListener('click', addRule);
 }
 
-// =======================
-// ЗАГРУЗКА ПРАВИЛ
-// =======================
 async function loadRules() {
   const rulesContainer = document.getElementById('rulesList');
   if (!rulesContainer) return;
 
   const querySnapshot = await getDocs(collection(db, "rules"));
   rulesContainer.innerHTML = "";
-
   querySnapshot.forEach((docSnap) => {
     const rule = docSnap.data().text;
     const ruleId = docSnap.id;
@@ -248,27 +355,20 @@ async function loadRules() {
     const ruleText = document.createElement('p');
     ruleText.textContent = rule;
 
-    // Если админ — добавить кнопку Удалить
     if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
       const deleteButton = document.createElement('button');
       deleteButton.textContent = "Удалить";
       deleteButton.classList.add('delete-button');
       deleteButton.onclick = () => deleteRule(ruleId);
-
       ruleElement.appendChild(ruleText);
       ruleElement.appendChild(deleteButton);
     } else {
-      // Простой пользователь — только текст
       ruleElement.appendChild(ruleText);
     }
-
     rulesContainer.appendChild(ruleElement);
   });
 }
 
-// =======================
-// УДАЛЕНИЕ ПРАВИЛА
-// =======================
 async function deleteRule(id) {
   try {
     await deleteDoc(doc(db, "rules", id));
@@ -279,9 +379,9 @@ async function deleteRule(id) {
   }
 }
 
-// ======================================================
-// РАБОТА С ЗАЯВКАМИ: ЗАГРУЗКА, ДОБАВЛЕНИЕ, ОДОБРЕНИЕ, УДАЛЕНИЕ
-// ======================================================
+// ============================
+// РАБОТА С ЗАЯВКАМИ
+// ============================
 
 // Задержка между отправкой заявок (5 секунд)
 let lastSubmissionTime = 0;
@@ -335,7 +435,6 @@ if (applicationForm) {
   });
 }
 
-// Загрузка всех заявок
 async function loadApplications() {
   if (!pendingApplicationsContainer || !approvedApplicationsContainer) return;
 
@@ -343,7 +442,6 @@ async function loadApplications() {
   approvedApplicationsContainer.innerHTML = "";
 
   const querySnapshot = await getDocs(collection(db, "applications"));
-
   querySnapshot.forEach((docSnap) => {
     const application = docSnap.data();
     const docId = docSnap.id;
@@ -353,11 +451,10 @@ async function loadApplications() {
 
     const applicationElement = document.createElement('div');
     applicationElement.classList.add('application-item');
-    // Вставляем текст с использованием шаблонных строк
     applicationElement.innerHTML = `<span>Роль: ${role} | История: ${story}</span>`;
 
     if (status === "pending" && auth.currentUser) {
-      // Если заявка в ожидании и пользователь - админ (из allowedEmails)
+      // Если пользователь - админ, даём кнопки
       if (allowedEmails.includes(auth.currentUser.email)) {
         const approveButton = document.createElement('button');
         approveButton.textContent = "Одобрить";
@@ -373,7 +470,7 @@ async function loadApplications() {
       pendingApplicationsContainer.appendChild(applicationElement);
     } else if (status === "approved") {
       // Одобренные заявки
-      // Можно позволить админам удалять одобренные заявки
+      // Можно позволить админам удалять
       if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
         const deleteButton = document.createElement('button');
         deleteButton.textContent = "Удалить";
@@ -385,7 +482,6 @@ async function loadApplications() {
   });
 }
 
-// Одобрение заявки
 async function approveApplication(id) {
   try {
     await updateDoc(doc(db, "applications", id), { status: "approved" });
@@ -395,7 +491,6 @@ async function approveApplication(id) {
   }
 }
 
-// Удаление заявки
 async function deleteApplication(id) {
   try {
     await deleteDoc(doc(db, "applications", id));
@@ -403,17 +498,4 @@ async function deleteApplication(id) {
   } catch (e) {
     alert("Ошибка при удалении заявки: " + e.message);
   }
-}
-
-// =========================
-// ФУНКЦИЯ showSnackbar (если нужна)
-// =========================
-function showSnackbar(message) {
-  const snackbar = document.getElementById("snackbar");
-  if (!snackbar) return;
-  snackbar.textContent = message;
-  snackbar.className = "show";
-  setTimeout(() => {
-    snackbar.className = "";
-  }, 3000);
 }
