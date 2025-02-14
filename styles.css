@@ -4,100 +4,115 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 body {
   font-family: 'Merriweather', serif;
   background: #121212;
   color: #f1f1f1;
-  line-height: 1.6;
+  line-height: 1.8;
+  transition: background-color 0.3s ease-in-out;
 }
+
+/* Ссылки */
 a {
   color: inherit;
   text-decoration: none;
 }
+
 /* Навигация */
 nav {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 20px 40px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
 nav ul {
   list-style: none;
   display: flex;
 }
+
 nav li {
   margin: 0 15px;
 }
+
 nav li a {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #D4AF37;
-  transition: color 0.3s ease;
-}
-nav li a:hover {
+  font-size: 1.2rem;
   color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.4s ease;
 }
-/* Блок с кнопками авторизации */
+
+nav li a:hover {
+  color: #D4AF37;
+}
+
 #authContainer {
-  margin-left: auto;
   display: flex;
-  gap: 10px;
+  gap: 15px;
 }
+
 .auth-button {
-  background: #800020;
-  color: #f1f1f1;
+  background: linear-gradient(135deg, #D4AF37, #800020);
+  color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 12px 24px;
   font-size: 1rem;
   border-radius: 30px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform 0.2s ease, background 0.3s;
 }
+
 .auth-button:hover {
+  transform: scale(1.1);
   background: #a00030;
 }
-/* Хедер с фоновым изображением */
+
+/* Хедер */
 header {
-  background: url('https://source.unsplash.com/1600x900/?romance,waterfall') no-repeat center center/cover;
+  background: url('https://source.unsplash.com/1600x900/?nature,waterfall') no-repeat center center/cover;
   position: relative;
-  height: 50vh;
+  height: 60vh;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 1s ease-out;
 }
-header::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-}
-header .header-content {
-  position: relative;
-  z-index: 1;
-}
+
 header h1 {
   font-family: 'Dancing Script', cursive;
-  font-size: 4rem;
+  font-size: 4.5rem;
   color: #D4AF37;
-  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
 }
-header p {
-  font-size: 1.5rem;
-  color: #f1f1f1;
+
+/* Анимация появления для хедера */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 /* Основной контейнер */
 main {
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
 }
+
 /* Секции */
 section {
   margin-bottom: 60px;
@@ -105,7 +120,9 @@ section {
   padding: 30px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  transition: background-color 0.3s ease;
 }
+
 section h2 {
   font-size: 2.2rem;
   margin-bottom: 20px;
@@ -113,6 +130,7 @@ section h2 {
   padding-bottom: 10px;
   color: #D4AF37;
 }
+
 /* Стили для списка правил */
 #rulesList {
   list-style: none;
@@ -120,6 +138,7 @@ section h2 {
   flex-direction: column;
   gap: 15px;
 }
+
 .rule-item {
   background: #2a2a2a;
   padding: 15px 20px;
@@ -129,12 +148,11 @@ section h2 {
   align-items: center;
   transition: background 0.3s;
 }
+
 .rule-item:hover {
   background: #3a3a3a;
 }
-.rule-item p {
-  margin: 0;
-}
+
 .delete-button {
   background: #b00020;
   border: none;
@@ -144,16 +162,19 @@ section h2 {
   color: #fff;
   transition: background 0.3s;
 }
+
 .delete-button:hover {
   background: #c51162;
 }
-/* Форма подачи заявки */
+
+/* Стили для формы заявки */
 .application-form label {
   display: block;
   margin-bottom: 8px;
   font-size: 1.1rem;
   color: #D4AF37;
 }
+
 .application-form input {
   width: 100%;
   padding: 12px;
@@ -164,23 +185,28 @@ section h2 {
   color: #f1f1f1;
   font-size: 1rem;
 }
+
 .application-form button {
-  background: #800020;
-  color: #f1f1f1;
+  background: linear-gradient(135deg, #D4AF37, #800020);
+  color: #fff;
   border: none;
   padding: 12px 24px;
   font-size: 1.1rem;
   border-radius: 30px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform 0.2s ease, background 0.3s;
 }
+
 .application-form button:hover {
+  transform: scale(1.1);
   background: #a00030;
 }
+
 /* Стили для списка заявок */
 .applications-container {
   margin-top: 30px;
 }
+
 .applications-container .application-item {
   background: #2a2a2a;
   padding: 15px 20px;
@@ -191,12 +217,15 @@ section h2 {
   align-items: center;
   transition: background 0.3s;
 }
+
 .applications-container .application-item:hover {
   background: #3a3a3a;
 }
+
 .applications-container .application-item span {
   font-size: 1.1rem;
 }
+
 .applications-container .application-item button {
   background: #800020;
   border: none;
@@ -206,9 +235,64 @@ section h2 {
   color: #fff;
   transition: background 0.3s;
 }
+
 .applications-container .application-item button:hover {
   background: #a00030;
 }
+
+/* Раздел для загрузки медиафайлов */
+#mediaUpload {
+  margin-top: 50px;
+}
+
+#mediaUpload h2 {
+  font-size: 2rem;
+  color: #D4AF37;
+  margin-bottom: 20px;
+}
+
+#mediaUpload form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#mediaUpload label {
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+#mediaUpload input {
+  background: #2a2a2a;
+  padding: 12px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  color: #f1f1f1;
+  font-size: 1rem;
+}
+
+#mediaUpload button {
+  background: linear-gradient(135deg, #D4AF37, #800020);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s;
+}
+
+#mediaUpload button:hover {
+  transform: scale(1.1);
+  background: #a00030;
+}
+
+#uploadStatus {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
 /* Футер */
 footer {
   background: #000;
@@ -216,9 +300,10 @@ footer {
   text-align: center;
   padding: 20px 10px;
 }
+
 /* Модальное окно для авторизации админа */
 .modal {
-  display: none; 
+  display: none;
   position: fixed;
   z-index: 100;
   left: 0;
@@ -228,16 +313,18 @@ footer {
   overflow: auto;
   background-color: rgba(0,0,0,0.7);
 }
+
 .modal-content {
   background-color: #1e1e1e;
   margin: 15% auto;
-  padding: 20px;
+  padding: 30px;
   border: 1px solid #888;
   width: 90%;
   max-width: 400px;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.7);
 }
+
 .close-modal {
   color: #aaa;
   float: right;
@@ -245,10 +332,12 @@ footer {
   font-weight: bold;
   cursor: pointer;
 }
+
 .close-modal:hover,
 .close-modal:focus {
   color: #fff;
 }
+
 .modal input {
   width: 100%;
   padding: 12px;
@@ -259,18 +348,21 @@ footer {
   color: #f1f1f1;
   font-size: 1rem;
 }
+
 .modal button {
-  background: #800020;
-  color: #f1f1f1;
+  background: linear-gradient(135deg, #D4AF37, #800020);
+  color: #fff;
   border: none;
   padding: 12px 24px;
   font-size: 1.1rem;
   border-radius: 30px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform 0.2s ease, background 0.3s;
   width: 100%;
 }
+
 .modal button:hover {
+  transform: scale(1.1);
   background: #a00030;
 }
 
@@ -299,4 +391,3 @@ footer {
   opacity: 1;
   bottom: 50px;
 }
-
