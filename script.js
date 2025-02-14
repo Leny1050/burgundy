@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-storage.js";
 
 // Конфигурация Firebase
 const firebaseConfig = {
@@ -17,6 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Список разрешённых email-адресов для администраторов
 const allowedEmails = [
@@ -30,6 +32,12 @@ const logoutButton = document.getElementById("logoutButton");
 const loginModal = document.getElementById("loginModal");
 const closeModal = document.getElementById("closeModal");
 const modalLoginButton = document.getElementById("modalLoginButton");
+
+// Элементы для загрузки медиафайлов
+const mediaUploadSection = document.getElementById("mediaUpload");
+const uploadForm = document.getElementById("uploadForm");
+const mediaFileInput = document.getElementById("mediaFile");
+const uploadStatus = document.getElementById("uploadStatus");
 
 // Открытие модального окна по клику на "Войти"
 loginButton.addEventListener("click", () => {
@@ -73,18 +81,15 @@ modalLoginButton.addEventListener("click", () => {
 
 // Отслеживание состояния аутентификации
 onAuthStateChanged(auth, (user) => {
-  const addRuleContainer = document.getElementById('addRuleContainer');
-  if (user) {
+  if (user && allowedEmails.includes(user.email)) {
     loginButton.style.display = "none";
     logoutButton.style.display = "inline-block";
-    if (addRuleContainer) addRuleContainer.style.display = 'block';
+    mediaUploadSection.style.display = "block"; // Показываем раздел загрузки медиа
   } else {
     loginButton.style.display = "inline-block";
     logoutButton.style.display = "none";
-    if (addRuleContainer) addRuleContainer.style.display = 'none';
+    mediaUploadSection.style.display = "none"; // Скрываем раздел загрузки медиа
   }
-  loadRules();
-  loadApplications();
 });
 
 // Выход
@@ -96,21 +101,60 @@ logoutButton.addEventListener("click", () => {
   });
 });
 
-// Функция для добавления задержки между отправкой заявок
-let lastSubmissionTime = 0;
-const submitDelay = 5000; // Задержка 5 секунд
+// Функция для загрузки медиафайлов
+uploadForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const mediaFile = mediaFileInput.files[0];
+  if (!mediaFile) return;
 
-// Функция для проверки капчи
-function verifyCaptcha() {
-  const recaptchaResponse = grecaptcha.getResponse();
-  if (!recaptchaResponse) {
-    alert("Пожалуйста, подтвердите, что вы не робот.");
-    return false;
+  // Получаем ссылку на файл в Firebase Storage
+  const fileRef = ref(storage, 'media/' + mediaFile.name);
+
+  try {
+    // Загружаем файл в Firebase Storage
+    const uploadResult = await uploadBytes(fileRef, mediaFile);
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+
+    // Отображаем ссылку на загруженный файл
+    uploadStatus.textContent = `Файл загружен: ${downloadURL}`;
+    showSnackbar("Файл успешно загружен!");
+  } catch (error) {
+    alert("Ошибка при загрузке файла: " + error.message);
   }
-  return true;
+});
+
+// Функция для показа уведомлений
+function showSnackbar(message) {
+  const snackbar = document.getElementById("snackbar");
+  snackbar.textContent = message;
+  snackbar.className = "show";
+  setTimeout(() => {
+    snackbar.className = "";
+  }, 3000);
 }
 
-// Загрузка правил из Firestore
+// Функция для добавления правила
+async function addRule() {
+  const newRuleInput = document.getElementById('new-rule');
+  if (!newRuleInput) return;
+  const newRuleText = newRuleInput.value.trim();
+  if (newRuleText && auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
+    try {
+      await addDoc(collection(db, "rules"), { text: newRuleText });
+      newRuleInput.value = "";
+      loadRules();
+      showSnackbar("Правило добавлено");
+    } catch (e) {
+      alert("Ошибка при добавлении правила: " + e.message);
+    }
+  } else {
+    alert("Пожалуйста, войдите с разрешенным адресом для добавления правила.");
+  }
+}
+
+document.getElementById('addRuleButton').addEventListener('click', addRule);
+
+// Функция для загрузки правил из Firestore
 async function loadRules() {
   const querySnapshot = await getDocs(collection(db, "rules"));
   const rulesContainer = document.getElementById('rulesList');
@@ -136,27 +180,6 @@ async function loadRules() {
   });
 }
 
-// Функция для добавления правила
-async function addRule() {
-  const newRuleInput = document.getElementById('new-rule');
-  if (!newRuleInput) return;
-  const newRuleText = newRuleInput.value.trim();
-  if (newRuleText && auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
-    try {
-      await addDoc(collection(db, "rules"), { text: newRuleText });
-      newRuleInput.value = "";
-      loadRules();
-      showSnackbar("Правило добавлено");
-    } catch (e) {
-      alert("Ошибка при добавлении правила: " + e.message);
-    }
-  } else {
-    alert("Пожалуйста, войдите с разрешенным адресом для добавления правила.");
-  }
-}
-
-document.getElementById('addRuleButton').addEventListener('click', addRule);
-
 // Функция для удаления правила
 async function deleteRule(id) {
   try {
@@ -165,6 +188,20 @@ async function deleteRule(id) {
     showSnackbar("Правило удалено");
   } catch (e) {
     alert("Ошибка при удалении правила: " + e.message);
+  }
+}
+
+// Функция для добавления заявки
+async function addApplication(role, story) {
+  try {
+    await addDoc(collection(db, "applications"), {
+      role: role,
+      story: story,
+      status: "pending"
+    });
+    showSnackbar("Заявка отправлена и ожидает проверки.");
+  } catch (e) {
+    alert("Ошибка при отправке заявки: " + e.message);
   }
 }
 
@@ -195,52 +232,10 @@ async function loadApplications() {
       applicationElement.appendChild(deleteButton);
       pendingApplicationsContainer.appendChild(applicationElement);
     } else if (status === "approved") {
-      if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = "Удалить";
-        deleteButton.onclick = () => deleteApplication(docSnap.id);
-        applicationElement.appendChild(deleteButton);
-      }
       approvedApplicationsContainer.appendChild(applicationElement);
     }
   });
 }
-
-// Обработчик формы заявки
-document.getElementById('applicationForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  // Проверка капчи
-  if (!verifyCaptcha()) {
-    return;
-  }
-
-  // Проверка задержки
-  const currentTime = Date.now();
-  if (currentTime - lastSubmissionTime < submitDelay) {
-    alert("Пожалуйста, подождите немного перед отправкой следующей заявки.");
-    return;
-  }
-  lastSubmissionTime = currentTime;
-
-  const roleInput = document.getElementById('role');
-  const storyInput = document.getElementById('story');
-  if (!roleInput || !storyInput) return;
-
-  try {
-    await addDoc(collection(db, "applications"), {
-      role: roleInput.value.trim(),
-      story: storyInput.value.trim(),
-      status: "pending"
-    });
-    alert("Ваша заявка отправлена и ожидает проверки.");
-    roleInput.value = "";
-    storyInput.value = "";
-    loadApplications();
-  } catch (e) {
-    alert("Ошибка при отправке заявки: " + e.message);
-  }
-});
 
 // Функция для одобрения заявки
 async function approveApplication(id) {
