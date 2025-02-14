@@ -67,6 +67,17 @@
         <div id="approvedApplications"></div>
       </div>
     </section>
+
+    <!-- Раздел для загрузки медиафайлов (только для администраторов) -->
+    <section id="mediaUpload" style="display:none;">
+      <h2>Загрузка медиафайлов</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <label for="mediaFile">Выберите файл</label>
+        <input type="file" id="mediaFile" name="mediaFile" accept="image/*,video/*" required>
+        <button type="submit">Загрузить</button>
+      </form>
+      <div id="uploadStatus"></div>
+    </section>
   </main>
 
   <!-- Футер -->
