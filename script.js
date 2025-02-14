@@ -1,35 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-storage.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-storage.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-// =======================
 // Конфигурация Firebase
-// =======================
 const firebaseConfig = {
   apiKey: "AIzaSyAv4Oet78KIcx_S4l7dlaxKUZ2pfZ5z2iI",
   authDomain: "burgundy-waterfall.firebaseapp.com",
   projectId: "burgundy-waterfall",
-  storageBucket: "burgundy-waterfall.firebasestorage.app", // Проверьте правильность этого поля!
+  storageBucket: "burgundy-waterfall.firebasestorage.app", // Убедитесь, что storageBucket корректен
   messagingSenderId: "710848092514",
   appId: "1:710848092514:web:130d7467b1ee8337cff43b",
   measurementId: "G-SJM886XS31"
@@ -41,67 +20,26 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// =======================
-// Список админ-аккаунтов
-// =======================
+// Список разрешённых email-адресов для администраторов
 const allowedEmails = [
   "101010tatata1010@gmail.com",
   "adminca@gmail.com"
 ];
 
-// ============================
-// ЭЛЕМЕНТЫ ДЛЯ АВТОРИЗАЦИИ
-// ============================
+// Элементы для авторизации
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
 const loginModal = document.getElementById("loginModal");
 const closeModal = document.getElementById("closeModal");
 const modalLoginButton = document.getElementById("modalLoginButton");
 
-// ==============================
-// ЭЛЕМЕНТЫ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ
-// ==============================
+// Элементы для загрузки медиафайлов
 const mediaUploadSection = document.getElementById("mediaUpload");
 const uploadForm = document.getElementById("uploadForm");
 const mediaFileInput = document.getElementById("mediaFile");
 const uploadStatus = document.getElementById("uploadStatus");
 
-// ==============================
-// РАЗДЕЛ ДЛЯ ОТОБРАЖЕНИЯ МЕДИА
-// ==============================
-const mediaGallery = document.getElementById("mediaGallery"); 
-// Предполагается, что в HTML есть: <section id="mediaGallery"></section>
-
-// =============================
-// РАБОТА С ПРАВИЛАМИ
-// =============================
-const addRuleButton = document.getElementById("addRuleButton");
-
-// ================================
-// РАБОТА С ЗАЯВКАМИ
-// ================================
-const applicationForm = document.getElementById("applicationForm");
-const pendingApplicationsContainer = document.getElementById('pendingApplications');
-const approvedApplicationsContainer = document.getElementById('approvedApplications');
-
-// =======================
-// ФУНКЦИЯ: показать snackbar
-// =======================
-function showSnackbar(message) {
-  const snackbar = document.getElementById("snackbar");
-  if (!snackbar) return;
-  snackbar.textContent = message;
-  snackbar.className = "show";
-  setTimeout(() => {
-    snackbar.className = "";
-  }, 3000);
-}
-
-// =======================
-// АВТОРИЗАЦИЯ (логин/логаут)
-// =======================
-
-// Открытие модального окна «Войти»
+// Открытие модального окна по клику на "Войти"
 loginButton.addEventListener("click", () => {
   loginModal.style.display = "block";
 });
@@ -118,11 +56,10 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// Обработчик логина (через модальное окно)
+// Авторизация через модальное окно
 modalLoginButton.addEventListener("click", () => {
   const email = document.getElementById("adminEmail").value.trim();
   const password = document.getElementById("adminPassword").value.trim();
-
   if (email && password) {
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
@@ -142,6 +79,19 @@ modalLoginButton.addEventListener("click", () => {
   }
 });
 
+// Отслеживание состояния аутентификации
+onAuthStateChanged(auth, (user) => {
+  if (user && allowedEmails.includes(user.email)) {
+    loginButton.style.display = "none";
+    logoutButton.style.display = "inline-block";
+    if (mediaUploadSection) mediaUploadSection.style.display = "block";  // Показываем форму загрузки
+  } else {
+    loginButton.style.display = "inline-block";
+    logoutButton.style.display = "none";
+    if (mediaUploadSection) mediaUploadSection.style.display = "none";  // Скрываем форму загрузки
+  }
+});
+
 // Выход
 logoutButton.addEventListener("click", () => {
   signOut(auth).then(() => {
@@ -151,108 +101,74 @@ logoutButton.addEventListener("click", () => {
   });
 });
 
-// =======================
-// ОТСЛЕЖИВАНИЕ АУТЕНТИФИКАЦИИ
-// =======================
-onAuthStateChanged(auth, (user) => {
-  const addRuleContainer = document.getElementById('addRuleContainer');
+// Функция для загрузки медиафайлов
+uploadForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const mediaFile = mediaFileInput.files[0];
+  if (!mediaFile) return;
 
-  if (user) {
-    // Если есть пользователь
-    loginButton.style.display = "none";
-    logoutButton.style.display = "inline-block";
-    if (addRuleContainer) addRuleContainer.style.display = 'block';
-    
-    // Если это админ — показываем форму загрузки
-    if (allowedEmails.includes(user.email)) {
-      if (mediaUploadSection) mediaUploadSection.style.display = "block";
-    } else {
-      if (mediaUploadSection) mediaUploadSection.style.display = "none";
-    }
-  } else {
-    // Если пользователя нет
-    loginButton.style.display = "inline-block";
-    logoutButton.style.display = "none";
-    if (addRuleContainer) addRuleContainer.style.display = 'none';
-    // Скрываем секцию загрузки для неадминов
-    if (mediaUploadSection) mediaUploadSection.style.display = "none";
+  // Генерируем уникальное имя для файла
+  const uniqueName = Date.now() + "_" + mediaFile.name;
+
+  // Создаём ссылку на файл в Firebase Storage
+  const fileRef = ref(storage, "media/" + uniqueName);
+
+  try {
+    // Загружаем файл в Firebase Storage
+    const uploadResult = await uploadBytes(fileRef, mediaFile);
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+
+    // Определяем тип файла (изображение или видео)
+    const fileType = mediaFile.type.startsWith("video") ? "video" : "image";
+
+    // Сохраняем информацию о файле в Firestore
+    await addDoc(collection(db, "media"), {
+      url: downloadURL,
+      type: fileType,
+      storagePath: "media/" + uniqueName,
+      originalName: mediaFile.name,
+      createdAt: Date.now()
+    });
+
+    uploadStatus.textContent = `Файл загружен: ${downloadURL}`;
+    showSnackbar("Файл успешно загружен!");
+    loadMedia();  // Обновим галерею
+
+  } catch (error) {
+    alert("Ошибка при загрузке файла: " + error.message);
   }
-
-  // В любом случае подгружаем правила, заявки и медиа
-  loadRules();
-  loadApplications();
-  loadMedia(); 
 });
 
-// ==============================
-// ЗАГРУЗКА МЕДИА (ФОТО/ВИДЕО)
-// ==============================
-if (uploadForm) {
-  uploadForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const mediaFile = mediaFileInput.files[0];
-    if (!mediaFile) return;
-
-    // Генерируем уникальное имя (чтобы не затирать файлы с одинаковыми именами)
-    // например, добавим timestamp
-    const uniqueName = Date.now() + "_" + mediaFile.name;
-
-    // Определяем путь в Storage
-    const fileRef = ref(storage, "media/" + uniqueName);
-
-    try {
-      // Загружаем файл
-      await uploadBytes(fileRef, mediaFile);
-      const downloadURL = await getDownloadURL(fileRef);
-
-      // Определим тип файла (image/video) по MIME-типу (mediaFile.type)
-      // Пример: "image/png", "video/mp4"
-      let fileType = "image";
-      if (mediaFile.type.startsWith("video")) {
-        fileType = "video";
-      }
-
-      // Сохраняем запись о файле в Firestore (коллекция media)
-      // Храним url, тип, storagePath (для будущего удаления), имя
-      await addDoc(collection(db, "media"), {
-        url: downloadURL,
-        type: fileType,
-        storagePath: "media/" + uniqueName, 
-        originalName: mediaFile.name,
-        createdAt: Date.now()
-      });
-
-      uploadStatus.textContent = `Файл загружен: ${downloadURL}`;
-      showSnackbar("Файл успешно загружен!");
-
-      // Обновим галерею
-      loadMedia();
-    } catch (error) {
-      alert("Ошибка при загрузке файла: " + error.message);
-    }
-  });
+// Функция для отображения уведомлений
+function showSnackbar(message) {
+  const snackbar = document.getElementById("snackbar");
+  if (!snackbar) return;
+  snackbar.textContent = message;
+  snackbar.className = "show";
+  setTimeout(() => {
+    snackbar.className = "";
+  }, 3000);
 }
 
-// ==============================
-// ЗАГРУЗКА СПИСКА МЕДИА И ОТОБРАЖЕНИЕ
-// ==============================
+// Функция для загрузки медиа (фото и видео)
 async function loadMedia() {
+  const mediaGallery = document.getElementById("mediaGallery");
   if (!mediaGallery) return;
 
-  // Очищаем галерею
+  // Очищаем текущую галерею
   mediaGallery.innerHTML = "";
 
+  // Загружаем медиа из Firestore
   try {
     const snapshot = await getDocs(collection(db, "media"));
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const docId = docSnap.id;
 
-      // Создаём контейнер для отдельного элемента
       const mediaItem = document.createElement("div");
       mediaItem.classList.add("media-item");
 
-      // Проверяем, это фото или видео
+      // Если это видео, создаём элемент <video>
       if (data.type === "video") {
         const video = document.createElement("video");
         video.src = data.url;
@@ -261,45 +177,42 @@ async function loadMedia() {
         video.height = 240;
         mediaItem.appendChild(video);
       } else {
-        // По умолчанию считаем "image"
+        // Если изображение, создаём элемент <img>
         const img = document.createElement("img");
         img.src = data.url;
         img.alt = data.originalName || "Загруженное изображение";
-        img.width = 320; 
+        img.width = 320;
         mediaItem.appendChild(img);
       }
 
-      // Название файла
+      // Добавляем название файла
       const fileName = document.createElement("p");
       fileName.textContent = data.originalName;
       mediaItem.appendChild(fileName);
 
-      // Если текущий пользователь — админ, показываем кнопку «Удалить»
+      // Если админ, показываем кнопку удаления
       const user = auth.currentUser;
       if (user && allowedEmails.includes(user.email)) {
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Удалить";
         deleteBtn.addEventListener("click", () => {
-          // Удаляем из Firestore и из Storage
           deleteMedia(docId, data.storagePath);
         });
         mediaItem.appendChild(deleteBtn);
       }
 
-      // Добавляем элемент на страницу
+      // Добавляем элемент в галерею
       mediaGallery.appendChild(mediaItem);
     });
-  } catch (err) {
-    console.error("Ошибка при загрузке медиа: ", err);
+  } catch (error) {
+    console.error("Ошибка при загрузке медиа: ", error);
   }
 }
 
-// ===========================
-// УДАЛЕНИЕ МЕДИА (админ)
-// ===========================
+// Функция для удаления медиа
 async function deleteMedia(docId, storagePath) {
   try {
-    // Удаляем файл из Storage
+    // Удаляем файл из Firebase Storage
     const fileRef = ref(storage, storagePath);
     await deleteObject(fileRef);
 
@@ -307,195 +220,8 @@ async function deleteMedia(docId, storagePath) {
     await deleteDoc(doc(db, "media", docId));
 
     showSnackbar("Медиафайл удалён");
-    // Обновим галерею
-    loadMedia();
+    loadMedia();  // Обновляем галерею
   } catch (error) {
     alert("Ошибка при удалении медиа: " + error.message);
-  }
-}
-
-// =======================
-// РАБОТА С ПРАВИЛАМИ
-// =======================
-async function addRule() {
-  const newRuleInput = document.getElementById('new-rule');
-  if (!newRuleInput) return;
-
-  const newRuleText = newRuleInput.value.trim();
-  if (newRuleText && auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
-    try {
-      await addDoc(collection(db, "rules"), { text: newRuleText });
-      newRuleInput.value = "";
-      loadRules();
-      showSnackbar("Правило добавлено");
-    } catch (e) {
-      alert("Ошибка при добавлении правила: " + e.message);
-    }
-  } else {
-    alert("Пожалуйста, войдите с разрешенным адресом для добавления правила.");
-  }
-}
-
-if (addRuleButton) {
-  addRuleButton.addEventListener('click', addRule);
-}
-
-async function loadRules() {
-  const rulesContainer = document.getElementById('rulesList');
-  if (!rulesContainer) return;
-
-  const querySnapshot = await getDocs(collection(db, "rules"));
-  rulesContainer.innerHTML = "";
-  querySnapshot.forEach((docSnap) => {
-    const rule = docSnap.data().text;
-    const ruleId = docSnap.id;
-
-    const ruleElement = document.createElement('li');
-    ruleElement.classList.add('rule-item');
-    const ruleText = document.createElement('p');
-    ruleText.textContent = rule;
-
-    if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
-      const deleteButton = document.createElement('button');
-      deleteButton.textContent = "Удалить";
-      deleteButton.classList.add('delete-button');
-      deleteButton.onclick = () => deleteRule(ruleId);
-      ruleElement.appendChild(ruleText);
-      ruleElement.appendChild(deleteButton);
-    } else {
-      ruleElement.appendChild(ruleText);
-    }
-    rulesContainer.appendChild(ruleElement);
-  });
-}
-
-async function deleteRule(id) {
-  try {
-    await deleteDoc(doc(db, "rules", id));
-    loadRules();
-    showSnackbar("Правило удалено");
-  } catch (e) {
-    alert("Ошибка при удалении правила: " + e.message);
-  }
-}
-
-// ============================
-// РАБОТА С ЗАЯВКАМИ
-// ============================
-
-// Задержка между отправкой заявок (5 секунд)
-let lastSubmissionTime = 0;
-const submitDelay = 5000; 
-
-// Функция для проверки reCAPTCHA
-function verifyCaptcha() {
-  const recaptchaResponse = grecaptcha.getResponse();
-  if (!recaptchaResponse) {
-    alert("Пожалуйста, подтвердите, что вы не робот.");
-    return false;
-  }
-  return true;
-}
-
-// Обработчик формы заявки
-if (applicationForm) {
-  applicationForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Проверка капчи
-    if (!verifyCaptcha()) {
-      return;
-    }
-
-    // Проверка задержки
-    const currentTime = Date.now();
-    if (currentTime - lastSubmissionTime < submitDelay) {
-      alert("Пожалуйста, подождите немного перед отправкой следующей заявки.");
-      return;
-    }
-    lastSubmissionTime = currentTime;
-
-    const roleInput = document.getElementById('role');
-    const storyInput = document.getElementById('story');
-    if (!roleInput || !storyInput) return;
-
-    try {
-      await addDoc(collection(db, "applications"), {
-        role: roleInput.value.trim(),
-        story: storyInput.value.trim(),
-        status: "pending"
-      });
-      alert("Ваша заявка отправлена и ожидает проверки.");
-      roleInput.value = "";
-      storyInput.value = "";
-      loadApplications();
-    } catch (e) {
-      alert("Ошибка при отправке заявки: " + e.message);
-    }
-  });
-}
-
-async function loadApplications() {
-  if (!pendingApplicationsContainer || !approvedApplicationsContainer) return;
-
-  pendingApplicationsContainer.innerHTML = "";
-  approvedApplicationsContainer.innerHTML = "";
-
-  const querySnapshot = await getDocs(collection(db, "applications"));
-  querySnapshot.forEach((docSnap) => {
-    const application = docSnap.data();
-    const docId = docSnap.id;
-    const role = application.role;
-    const story = application.story;
-    const status = application.status;
-
-    const applicationElement = document.createElement('div');
-    applicationElement.classList.add('application-item');
-    applicationElement.innerHTML = `<span>Роль: ${role} | История: ${story}</span>`;
-
-    if (status === "pending" && auth.currentUser) {
-      // Если пользователь - админ, даём кнопки
-      if (allowedEmails.includes(auth.currentUser.email)) {
-        const approveButton = document.createElement('button');
-        approveButton.textContent = "Одобрить";
-        approveButton.onclick = () => approveApplication(docId);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = "Удалить";
-        deleteButton.onclick = () => deleteApplication(docId);
-
-        applicationElement.appendChild(approveButton);
-        applicationElement.appendChild(deleteButton);
-      }
-      pendingApplicationsContainer.appendChild(applicationElement);
-    } else if (status === "approved") {
-      // Одобренные заявки
-      // Можно позволить админам удалять
-      if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = "Удалить";
-        deleteButton.onclick = () => deleteApplication(docId);
-        applicationElement.appendChild(deleteButton);
-      }
-      approvedApplicationsContainer.appendChild(applicationElement);
-    }
-  });
-}
-
-async function approveApplication(id) {
-  try {
-    await updateDoc(doc(db, "applications", id), { status: "approved" });
-    loadApplications();
-  } catch (e) {
-    alert("Ошибка при одобрении заявки: " + e.message);
-  }
-}
-
-async function deleteApplication(id) {
-  try {
-    await deleteDoc(doc(db, "applications", id));
-    loadApplications();
-  } catch (e) {
-    alert("Ошибка при удалении заявки: " + e.message);
   }
 }
