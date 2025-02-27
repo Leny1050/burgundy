@@ -29,7 +29,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAv4Oet78KIcx_S4l7dlaxKUZ2pfZ5z2iI",
   authDomain: "burgundy-waterfall.firebaseapp.com",
   projectId: "burgundy-waterfall",
-  storageBucket: "burgundy-waterfall.firebasestorage.app", // Проверьте правильность этого поля!
+  storageBucket: "burgundy-waterfall.firebasestorage.app",
   messagingSenderId: "710848092514",
   appId: "1:710848092514:web:130d7467b1ee8337cff43b",
   measurementId: "G-SJM886XS31"
@@ -70,7 +70,6 @@ const uploadStatus = document.getElementById("uploadStatus");
 // РАЗДЕЛ ДЛЯ ОТОБРАЖЕНИЯ МЕДИА
 // ==============================
 const mediaGallery = document.getElementById("mediaGallery"); 
-// Предполагается, что в HTML есть: <section id="mediaGallery"></section>
 
 // =============================
 // РАБОТА С ПРАВИЛАМИ
@@ -178,10 +177,13 @@ onAuthStateChanged(auth, (user) => {
     if (mediaUploadSection) mediaUploadSection.style.display = "none";
   }
 
-  // В любом случае подгружаем правила, заявки и медиа
+  // Загружаем правила, заявки и медиа
   loadRules();
   loadApplications();
-  loadMedia(); 
+  loadMedia();
+
+  // Загружаем ленту Telegram (iframe)
+  loadTelegramFeed();
 });
 
 // ==============================
@@ -193,27 +195,18 @@ if (uploadForm) {
     const mediaFile = mediaFileInput.files[0];
     if (!mediaFile) return;
 
-    // Генерируем уникальное имя (чтобы не затирать файлы с одинаковыми именами)
-    // например, добавим timestamp
     const uniqueName = Date.now() + "_" + mediaFile.name;
-
-    // Определяем путь в Storage
     const fileRef = ref(storage, "media/" + uniqueName);
 
     try {
-      // Загружаем файл
       await uploadBytes(fileRef, mediaFile);
       const downloadURL = await getDownloadURL(fileRef);
 
-      // Определим тип файла (image/video) по MIME-типу (mediaFile.type)
-      // Пример: "image/png", "video/mp4"
       let fileType = "image";
       if (mediaFile.type.startsWith("video")) {
         fileType = "video";
       }
 
-      // Сохраняем запись о файле в Firestore (коллекция media)
-      // Храним url, тип, storagePath (для будущего удаления), имя
       await addDoc(collection(db, "media"), {
         url: downloadURL,
         type: fileType,
@@ -225,7 +218,6 @@ if (uploadForm) {
       uploadStatus.textContent = `Файл загружен: ${downloadURL}`;
       showSnackbar("Файл успешно загружен!");
 
-      // Обновим галерею
       loadMedia();
     } catch (error) {
       alert("Ошибка при загрузке файла: " + error.message);
@@ -238,8 +230,6 @@ if (uploadForm) {
 // ==============================
 async function loadMedia() {
   if (!mediaGallery) return;
-
-  // Очищаем галерею
   mediaGallery.innerHTML = "";
 
   try {
@@ -248,11 +238,9 @@ async function loadMedia() {
       const data = docSnap.data();
       const docId = docSnap.id;
 
-      // Создаём контейнер для отдельного элемента
       const mediaItem = document.createElement("div");
       mediaItem.classList.add("media-item");
 
-      // Проверяем, это фото или видео
       if (data.type === "video") {
         const video = document.createElement("video");
         video.src = data.url;
@@ -261,7 +249,6 @@ async function loadMedia() {
         video.height = 240;
         mediaItem.appendChild(video);
       } else {
-        // По умолчанию считаем "image"
         const img = document.createElement("img");
         img.src = data.url;
         img.alt = data.originalName || "Загруженное изображение";
@@ -269,24 +256,20 @@ async function loadMedia() {
         mediaItem.appendChild(img);
       }
 
-      // Название файла
       const fileName = document.createElement("p");
       fileName.textContent = data.originalName;
       mediaItem.appendChild(fileName);
 
-      // Если текущий пользователь — админ, показываем кнопку «Удалить»
       const user = auth.currentUser;
       if (user && allowedEmails.includes(user.email)) {
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Удалить";
         deleteBtn.addEventListener("click", () => {
-          // Удаляем из Firestore и из Storage
           deleteMedia(docId, data.storagePath);
         });
         mediaItem.appendChild(deleteBtn);
       }
 
-      // Добавляем элемент на страницу
       mediaGallery.appendChild(mediaItem);
     });
   } catch (err) {
@@ -299,15 +282,11 @@ async function loadMedia() {
 // ===========================
 async function deleteMedia(docId, storagePath) {
   try {
-    // Удаляем файл из Storage
     const fileRef = ref(storage, storagePath);
     await deleteObject(fileRef);
-
-    // Удаляем документ из Firestore
     await deleteDoc(doc(db, "media", docId));
 
     showSnackbar("Медиафайл удалён");
-    // Обновим галерею
     loadMedia();
   } catch (error) {
     alert("Ошибка при удалении медиа: " + error.message);
@@ -387,7 +366,6 @@ async function deleteRule(id) {
 let lastSubmissionTime = 0;
 const submitDelay = 5000; 
 
-// Функция для проверки reCAPTCHA
 function verifyCaptcha() {
   const recaptchaResponse = grecaptcha.getResponse();
   if (!recaptchaResponse) {
@@ -397,17 +375,14 @@ function verifyCaptcha() {
   return true;
 }
 
-// Обработчик формы заявки
 if (applicationForm) {
   applicationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Проверка капчи
     if (!verifyCaptcha()) {
       return;
     }
 
-    // Проверка задержки
     const currentTime = Date.now();
     if (currentTime - lastSubmissionTime < submitDelay) {
       alert("Пожалуйста, подождите немного перед отправкой следующей заявки.");
@@ -454,7 +429,6 @@ async function loadApplications() {
     applicationElement.innerHTML = `<span>Роль: ${role} | История: ${story}</span>`;
 
     if (status === "pending" && auth.currentUser) {
-      // Если пользователь - админ, даём кнопки
       if (allowedEmails.includes(auth.currentUser.email)) {
         const approveButton = document.createElement('button');
         approveButton.textContent = "Одобрить";
@@ -469,8 +443,6 @@ async function loadApplications() {
       }
       pendingApplicationsContainer.appendChild(applicationElement);
     } else if (status === "approved") {
-      // Одобренные заявки
-      // Можно позволить админам удалять
       if (auth.currentUser && allowedEmails.includes(auth.currentUser.email)) {
         const deleteButton = document.createElement('button');
         deleteButton.textContent = "Удалить";
@@ -498,4 +470,24 @@ async function deleteApplication(id) {
   } catch (e) {
     alert("Ошибка при удалении заявки: " + e.message);
   }
+}
+
+// ========================
+// ТЕЛЕГРАМ-ФИД (добавлено)
+// ========================
+function loadTelegramFeed() {
+  const feedWrapper = document.getElementById("telegramIframeWrapper");
+  if (!feedWrapper) return;
+
+  // Замените 'mychannel' на username вашего публичного канала
+  // (например 'mychannel' -> 'nasa' если ссылка t.me/nasa)
+  const channelUsername = "mychannel";
+
+  feedWrapper.innerHTML = `
+    <iframe 
+      src="https://t.me/s/${channelUsername}?embed=1"
+      height="600"
+      style="border:none; width:100%; overflow:auto;"
+    ></iframe>
+  `;
 }
