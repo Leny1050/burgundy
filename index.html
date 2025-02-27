@@ -7,7 +7,10 @@
   <!-- Подключение шрифтов и стили CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+  <link 
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" 
+    rel="stylesheet"
+  >
   <link rel="stylesheet" href="styles.css">
 
   <!-- Подключение Google reCAPTCHA (обязательно для капчи) -->
@@ -110,6 +113,14 @@
       <h2>Галерея медиафайлов</h2>
       <!-- Загруженные фото/видео будут появляться здесь скриптом -->
     </section>
+
+    <!-- НОВЫЙ раздел для Telegram-канала -->
+    <section id="telegramFeed">
+      <h2>Лента из Telegram-канала</h2>
+      <div id="telegramIframeWrapper">
+        <!-- Сюда скрипт добавит iframe -->
+      </div>
+    </section>
   </main>
 
   <!-- Футер -->
@@ -131,8 +142,7 @@
   <!-- Snackbar для уведомлений -->
   <div id="snackbar"></div>
 
-  <!-- Подключение скрипта -->
-  <!-- ВАЖНО: используйте type="module", чтобы работал import -->
+  <!-- Подключение скрипта (type="module") -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
