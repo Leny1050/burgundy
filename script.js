@@ -481,7 +481,7 @@ function loadTelegramFeed() {
 
   // Замените 'mychannel' на username вашего публичного канала
   // (например 'mychannel' -> 'nasa' если ссылка t.me/nasa)
-  const channelUsername = "mychannel";
+  const channelUsername = "p8pisa";
 
   feedWrapper.innerHTML = `
     <iframe 
