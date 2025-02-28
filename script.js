@@ -58,18 +58,6 @@ const loginModal = document.getElementById("loginModal");
 const closeModal = document.getElementById("closeModal");
 const modalLoginButton = document.getElementById("modalLoginButton");
 
-// ==============================
-// ЭЛЕМЕНТЫ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ
-// ==============================
-const mediaUploadSection = document.getElementById("mediaUpload");
-const uploadForm = document.getElementById("uploadForm");
-const mediaFileInput = document.getElementById("mediaFile");
-const uploadStatus = document.getElementById("uploadStatus");
-
-// ==============================
-// РАЗДЕЛ ДЛЯ ОТОБРАЖЕНИЯ МЕДИА
-// ==============================
-const mediaGallery = document.getElementById("mediaGallery"); 
 
 // =============================
 // РАБОТА С ПРАВИЛАМИ
@@ -180,7 +168,6 @@ onAuthStateChanged(auth, (user) => {
   // Загружаем правила, заявки и медиа
   loadRules();
   loadApplications();
-  loadMedia();
 
 // =======================
 // РАБОТА С ПРАВИЛАМИ
@@ -253,7 +240,7 @@ async function deleteRule(id) {
 
 // Задержка между отправкой заявок (5 секунд)
 let lastSubmissionTime = 0;
-const submitDelay = 5000; 
+const submitDelay = 10000; 
 
 function verifyCaptcha() {
   const recaptchaResponse = grecaptcha.getResponse();
