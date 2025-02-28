@@ -315,7 +315,7 @@ async function loadApplications() {
 
     const applicationElement = document.createElement('div');
     applicationElement.classList.add('application-item');
-    applicationElement.innerHTML = `<span>Роль: ${role} | История: ${story}</span>`;
+    applicationElement.innerHTML = <span>Роль: ${role} | История: ${story}</span>;
 
     if (status === "pending" && auth.currentUser) {
       if (allowedEmails.includes(auth.currentUser.email)) {
