@@ -14,13 +14,6 @@ import {
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-storage.js";
 
 // =======================
 // Конфигурация Firebase
@@ -29,7 +22,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyAv4Oet78KIcx_S4l7dlaxKUZ2pfZ5z2iI",
   authDomain: "burgundy-waterfall.firebaseapp.com",
   projectId: "burgundy-waterfall",
-  storageBucket: "burgundy-waterfall.firebasestorage.app",
   messagingSenderId: "710848092514",
   appId: "1:710848092514:web:130d7467b1ee8337cff43b",
   measurementId: "G-SJM886XS31"
@@ -39,7 +31,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // =======================
 // Список админ-аккаунтов
@@ -59,25 +50,12 @@ const closeModal = document.getElementById("closeModal");
 const modalLoginButton = document.getElementById("modalLoginButton");
 
 // ==============================
-// ЭЛЕМЕНТЫ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ
+// РАЗДЕЛ ДЛЯ ПРАВИЛ
 // ==============================
-const mediaUploadSection = document.getElementById("mediaUpload");
-const uploadForm = document.getElementById("uploadForm");
-const mediaFileInput = document.getElementById("mediaFile");
-const uploadStatus = document.getElementById("uploadStatus");
-
-// ==============================
-// РАЗДЕЛ ДЛЯ ОТОБРАЖЕНИЯ МЕДИА
-// ==============================
-const mediaGallery = document.getElementById("mediaGallery"); 
-
-// =============================
-// РАБОТА С ПРАВИЛАМИ
-// =============================
 const addRuleButton = document.getElementById("addRuleButton");
 
 // ================================
-// РАБОТА С ЗАЯВКАМИ
+// РАЗДЕЛ ДЛЯ ЗАЯВОК
 // ================================
 const applicationForm = document.getElementById("applicationForm");
 const pendingApplicationsContainer = document.getElementById('pendingApplications');
@@ -162,136 +140,17 @@ onAuthStateChanged(auth, (user) => {
     logoutButton.style.display = "inline-block";
     if (addRuleContainer) addRuleContainer.style.display = 'block';
     
-    // Если это админ — показываем форму загрузки
-    if (allowedEmails.includes(user.email)) {
-      if (mediaUploadSection) mediaUploadSection.style.display = "block";
-    } else {
-      if (mediaUploadSection) mediaUploadSection.style.display = "none";
-    }
   } else {
     // Если пользователя нет
     loginButton.style.display = "inline-block";
     logoutButton.style.display = "none";
     if (addRuleContainer) addRuleContainer.style.display = 'none';
-    // Скрываем секцию загрузки для неадминов
-    if (mediaUploadSection) mediaUploadSection.style.display = "none";
   }
 
-  // Загружаем правила, заявки и медиа
+  // Загружаем правила и заявки
   loadRules();
   loadApplications();
-  loadMedia();
-
-  // Загружаем ленту Telegram (iframe)
-  loadTelegramFeed();
 });
-
-// ==============================
-// ЗАГРУЗКА МЕДИА (ФОТО/ВИДЕО)
-// ==============================
-if (uploadForm) {
-  uploadForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const mediaFile = mediaFileInput.files[0];
-    if (!mediaFile) return;
-
-    const uniqueName = Date.now() + "_" + mediaFile.name;
-    const fileRef = ref(storage, "media/" + uniqueName);
-
-    try {
-      await uploadBytes(fileRef, mediaFile);
-      const downloadURL = await getDownloadURL(fileRef);
-
-      let fileType = "image";
-      if (mediaFile.type.startsWith("video")) {
-        fileType = "video";
-      }
-
-      await addDoc(collection(db, "media"), {
-        url: downloadURL,
-        type: fileType,
-        storagePath: "media/" + uniqueName, 
-        originalName: mediaFile.name,
-        createdAt: Date.now()
-      });
-
-      uploadStatus.textContent = Файл загружен: ${downloadURL};
-      showSnackbar("Файл успешно загружен!");
-
-      loadMedia();
-    } catch (error) {
-      alert("Ошибка при загрузке файла: " + error.message);
-    }
-  });
-}
-
-// ==============================
-// ЗАГРУЗКА СПИСКА МЕДИА И ОТОБРАЖЕНИЕ
-// ==============================
-async function loadMedia() {
-  if (!mediaGallery) return;
-  mediaGallery.innerHTML = "";
-
-  try {
-    const snapshot = await getDocs(collection(db, "media"));
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      const docId = docSnap.id;
-
-      const mediaItem = document.createElement("div");
-      mediaItem.classList.add("media-item");
-
-      if (data.type === "video") {
-        const video = document.createElement("video");
-        video.src = data.url;
-        video.controls = true;
-        video.width = 320;
-        video.height = 240;
-        mediaItem.appendChild(video);
-      } else {
-        const img = document.createElement("img");
-        img.src = data.url;
-        img.alt = data.originalName || "Загруженное изображение";
-        img.width = 320; 
-        mediaItem.appendChild(img);
-      }
-
-      const fileName = document.createElement("p");
-      fileName.textContent = data.originalName;
-      mediaItem.appendChild(fileName);
-
-      const user = auth.currentUser;
-      if (user && allowedEmails.includes(user.email)) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Удалить";
-        deleteBtn.addEventListener("click", () => {
-          deleteMedia(docId, data.storagePath);
-        });
-        mediaItem.appendChild(deleteBtn);
-      }
-
-      mediaGallery.appendChild(mediaItem);
-    });
-  } catch (err) {
-    console.error("Ошибка при загрузке медиа: ", err);
-  }
-}
-
-// ===========================
-// УДАЛЕНИЕ МЕДИА (админ)
-// ===========================
-async function deleteMedia(docId, storagePath) {
-  try {
-    const fileRef = ref(storage, storagePath);
-    await deleteObject(fileRef);
-    await deleteDoc(doc(db, "media", docId));
-
-    showSnackbar("Медиафайл удалён");
-    loadMedia();
-  } catch (error) {
-    alert("Ошибка при удалении медиа: " + error.message);
-  }
-}
 
 // =======================
 // РАБОТА С ПРАВИЛАМИ
@@ -426,7 +285,7 @@ async function loadApplications() {
 
     const applicationElement = document.createElement('div');
     applicationElement.classList.add('application-item');
-    applicationElement.innerHTML = <span>Роль: ${role} | История: ${story}</span>;
+    applicationElement.innerHTML = `<span>Роль: ${role} | История: ${story}</span>`;
 
     if (status === "pending" && auth.currentUser) {
       if (allowedEmails.includes(auth.currentUser.email)) {
@@ -470,24 +329,4 @@ async function deleteApplication(id) {
   } catch (e) {
     alert("Ошибка при удалении заявки: " + e.message);
   }
-}
-
-// ========================
-// ТЕЛЕГРАМ-ФИД (добавлено)
-// ========================
-function loadTelegramFeed() {
-  const feedWrapper = document.getElementById("telegramIframeWrapper");
-  if (!feedWrapper) return;
-
-  // Замените 'mychannel' на username вашего публичного канала
-  // (например 'mychannel' -> 'nasa' если ссылка t.me/nasa)
-  const channelUsername = "p8pisa";
-
-  feedWrapper.innerHTML = 
-    <iframe 
-      src="https://t.me/s/${channelUsername}?embed=1"
-      height="600"
-      style="border:none; width:100%; overflow:auto;"
-    ></iframe>
-  ;
 }
