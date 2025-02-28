@@ -6,10 +6,12 @@
   font-family: 'Merriweather', serif;
 }
 
+/* Общие стили */
 body {
-  background: #121212;
+  background: linear-gradient(135deg, #121212, #1b1b1b);
   color: #f1f1f1;
   line-height: 1.8;
+  font-size: 16px;
   transition: background-color 0.3s ease-in-out;
 }
 
@@ -21,12 +23,12 @@ a {
 
 /* Навигация */
 nav {
-  background: rgba(0, 0, 0, 0.85);
-  padding: 20px 40px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.9);
+  padding: 20px 50px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -36,39 +38,37 @@ nav {
 nav ul {
   list-style: none;
   display: flex;
-}
-
-nav li {
-  margin: 0 20px;
+  gap: 30px;
 }
 
 nav li a {
   font-size: 1.3rem;
   color: #fff;
   text-transform: uppercase;
-  letter-spacing: 1px;
   font-weight: bold;
-  transition: color 0.4s ease;
+  letter-spacing: 1px;
+  transition: color 0.4s ease, transform 0.3s ease;
 }
 
 nav li a:hover {
   color: #D4AF37;
+  transform: scale(1.1);
 }
 
 #authContainer {
   display: flex;
-  gap: 15px;
+  gap: 20px;
 }
 
 .auth-button {
   background: linear-gradient(135deg, #D4AF37, #800020);
   color: #fff;
   border: none;
-  padding: 14px 28px;
-  font-size: 1.1rem;
+  padding: 14px 30px;
+  font-size: 1.2rem;
   border-radius: 30px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.3s;
+  transition: transform 0.3s ease, background 0.3s;
 }
 
 .auth-button:hover {
@@ -79,29 +79,31 @@ nav li a:hover {
 /* Хедер */
 header {
   background: url('https://source.unsplash.com/1600x900/?nature,waterfall') no-repeat center center/cover;
+  background-size: cover;
   position: relative;
-  height: 70vh;
+  height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  color: #fff;
   box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
   animation: fadeIn 1s ease-out;
-  color: #fff;
 }
 
 header h1 {
   font-family: 'Dancing Script', cursive;
-  font-size: 5rem;
+  font-size: 6rem;
   color: #D4AF37;
-  text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.7);
+  text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.8);
+  margin-bottom: 20px;
 }
 
 header p {
-  margin-top: 10px;
   font-size: 1.6rem;
+  font-weight: 500;
   color: #fff;
-  max-width: 600px;
+  max-width: 700px;
   margin: 20px auto;
 }
 
@@ -109,7 +111,7 @@ header p {
 @keyframes fadeIn {
   0% {
     opacity: 0;
-    transform: translateY(-30px);
+    transform: translateY(-50px);
   }
   100% {
     opacity: 1;
@@ -121,28 +123,36 @@ header p {
 main {
   max-width: 1200px;
   margin: 60px auto;
-  padding: 0 20px;
+  padding: 40px;
   background-color: #1e1e1e;
-  border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  border-radius: 15px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
 }
 
 /* Секции */
 section {
   margin-bottom: 60px;
   padding: 40px;
-  border-radius: 10px;
-  background: #1e1e1e;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  transition: background-color 0.3s ease;
+  border-radius: 15px;
+  background: #2a2a2a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+section:hover {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
 }
 
 section h2 {
-  font-size: 2.4rem;
-  margin-bottom: 25px;
+  font-size: 2.5rem;
+  margin-bottom: 30px;
   border-bottom: 3px solid #D4AF37;
   padding-bottom: 10px;
   color: #D4AF37;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Стили для списка правил */
@@ -156,35 +166,37 @@ section h2 {
 .rule-item {
   background: #333;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .rule-item:hover {
   background: #444;
+  transform: scale(1.02);
 }
 
 .delete-button {
   background: #b00020;
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 12px 18px;
+  border-radius: 8px;
   cursor: pointer;
   color: #fff;
-  transition: background 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .delete-button:hover {
   background: #c51162;
+  transform: scale(1.1);
 }
 
 /* Стили для формы заявки */
 .application-form label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 1.2rem;
   color: #D4AF37;
 }
@@ -192,12 +204,18 @@ section h2 {
 .application-form input {
   width: 100%;
   padding: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   border: 1px solid #555;
   border-radius: 8px;
   background: #333;
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  transition: background-color 0.3s ease;
+}
+
+.application-form input:focus {
+  background: #444;
+  outline: none;
 }
 
 .application-form button {
@@ -205,14 +223,14 @@ section h2 {
   color: #fff;
   border: none;
   padding: 15px 30px;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   border-radius: 30px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.3s;
+  transition: transform 0.3s ease, background 0.3s;
 }
 
 .application-form button:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   background: #a00030;
 }
 
@@ -224,34 +242,37 @@ section h2 {
 .applications-container .application-item {
   background: #333;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .applications-container .application-item:hover {
   background: #444;
+  transform: scale(1.02);
 }
 
 .applications-container .application-item span {
   font-size: 1.2rem;
+  font-weight: 500;
 }
 
 .applications-container .application-item button {
   background: #800020;
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 12px 18px;
+  border-radius: 8px;
   cursor: pointer;
   color: #fff;
-  transition: background 0.3s;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .applications-container .application-item button:hover {
   background: #a00030;
+  transform: scale(1.1);
 }
 
 /* Футер */
@@ -260,7 +281,7 @@ footer {
   color: #777;
   text-align: center;
   padding: 30px 20px;
-  border-top: 1px solid #444;
+  border-top: 2px solid #444;
 }
 
 /* Модальное окно для авторизации админа */
@@ -322,11 +343,11 @@ footer {
   border-radius: 30px;
   cursor: pointer;
   width: 100%;
-  transition: transform 0.2s ease, background 0.3s;
+  transition: transform 0.3s ease, background 0.3s;
 }
 
 .modal button:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   background: #a00030;
 }
 
