@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html><html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,13 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Merriweather:wght@300;400;700&display=swap" 
     rel="stylesheet"
   >
-  <link rel="stylesheet" href="styles.css">
-
-  <!-- Подключение Google reCAPTCHA -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-  <!-- Подключение Telegram Web Apps -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
+  <link rel="stylesheet" href="styles.css">  <!-- Подключение Google reCAPTCHA (обязательно для капчи) -->  <script src="https://www.google.com/recaptcha/api.js" async defer></script></head>
 <body>
   <!-- Фиксированное меню -->
   <nav>
@@ -26,27 +19,22 @@
       <li><a href="#applications">Заявки</a></li>
     </ul>
     <div id="authContainer">
-      <button id="loginButton" class="auth-button">Войти через Telegram</button>
+      <button id="loginButton" class="auth-button">Войти</button>
       <button id="logoutButton" class="auth-button" style="display: none;">Выйти</button>
     </div>
-  </nav>
-
-  <!-- Хедер с фоновым изображением -->
-  <header>
+  </nav>  <!-- Хедер с фоновым изображением -->  <header>
     <div class="header-content">
       <h1>Burgundy Waterfall</h1>
-      <p id="userWelcome">Загрузка данных...</p>
+      <p>заходите к нам, за актив админы будут целовать вам пяточки)</p>
     </div>
-  </header>
-
-  <!-- Основной контент -->
-  <main>
+  </header>  <!-- Основной контент -->  <main>
     <!-- Раздел с правилами чата -->
     <section id="rules">
       <h2>Правила Чата</h2>
       <ul id="rulesList">
         <li class="rule-item"><p>Загрузка правил...</p></li>
       </ul>
+      <!-- Блок для добавления нового правила (только для админа) -->
       <div id="addRuleContainer" style="margin-top: 20px; display: none;">
         <input 
           type="text" 
@@ -56,73 +44,49 @@
         >
         <button id="addRuleButton">Добавить правило</button>
       </div>
-    </section>
+    </section><!-- Раздел с заявками -->
+<section id="applications">
+  <h2>Заявка на вступление</h2>
+  <form id="applicationForm" class="application-form">
+    <label for="role">На какую роль?(и ваш юз тг)</label>
+    <input 
+      type="text" 
+      id="role" 
+      name="role" 
+      required 
+      placeholder="Введите желаемую роль"
+    >
+    <label for="story">Из какой истории персонаж?</label>
+    <input 
+      type="text" 
+      id="story" 
+      name="story" 
+      required 
+      placeholder="Укажите историю персонажа"
+    >
+    <!-- Google reCAPTCHA -->
+    <div class="g-recaptcha" data-sitekey="6Ld30MsqAAAAAGqA2cNks7A9wrUHqVO16vB3dVQF"></div>
+    <button type="submit">Отправить заявку</button>
+  </form>
+  <div class="applications-container" id="applicationsContainer">
+    <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Ожидающие заявки</h2>
+    <div id="pendingApplications"></div>
+  </div>
+  <div class="applications-container" id="approvedContainer">
+    <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Одобренные заявки</h2>
+    <div id="approvedApplications"></div>
+  </div>
+</section>
 
-    <!-- Раздел с заявками -->
-    <section id="applications">
-      <h2>Заявка на вступление</h2>
-      <form id="applicationForm" class="application-form">
-        <label for="role">На какую роль?(и ваш юз тг)</label>
-        <input 
-          type="text" 
-          id="role" 
-          name="role" 
-          required 
-          placeholder="Введите желаемую роль"
-        >
-        <label for="story">Из какой истории персонаж?</label>
-        <input 
-          type="text" 
-          id="story" 
-          name="story" 
-          required 
-          placeholder="Укажите историю персонажа"
-        >
-        <div class="g-recaptcha" data-sitekey="6Ld30MsqAAAAAGqA2cNks7A9wrUHqVO16vB3dVQF"></div>
-        <button type="submit">Отправить заявку</button>
-      </form>
-      <div class="applications-container" id="applicationsContainer">
-        <h2>Ожидающие заявки</h2>
-        <div id="pendingApplications"></div>
-      </div>
-      <div class="applications-container" id="approvedContainer">
-        <h2>Одобренные заявки</h2>
-        <div id="approvedApplications"></div>
-      </div>
-    </section>
-
-  <!-- Футер -->
-  <footer>
+  <!-- Футер -->  <footer>
     <p>&copy; 2024 Burgundy Waterfall. Все права защищены.</p>
-  </footer>
-
-  <!-- Snackbar для уведомлений -->
-  <div id="snackbar"></div>
-
-  <!-- Подключение Telegram Web Apps API -->
-  <script>
-    // Подключаем Telegram Web App API
-    let tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачивает WebView на весь экран
-
-    // Получаем данные пользователя
-    let user = tg.initDataUnsafe?.user;
-    if (user) {
-        document.getElementById("userWelcome").innerHTML = `Привет, ${user.first_name}!`;
-    } else {
-        document.getElementById("userWelcome").innerHTML = "Добро пожаловать!";
-    }
-
-    // Кнопка входа через Telegram
-    document.getElementById("loginButton").addEventListener("click", function() {
-        if (user) {
-            alert(`Вы уже вошли как ${user.first_name}`);
-        } else {
-            alert("Авторизация доступна только через Telegram Web App");
-        }
-    });
-
-  </script>
-
-</body>
+  </footer>  <!-- Модальное окно для авторизации админа -->  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h2 style="color:#D4AF37; margin-bottom:15px; text-align:center;">Админ Вход</h2>
+      <input type="email" id="adminEmail" placeholder="Email" required>
+      <input type="password" id="adminPassword" placeholder="Пароль" required>
+      <button id="modalLoginButton">Войти</button>
+    </div>
+  </div>  <!-- Snackbar для уведомлений -->  <div id="snackbar"></div>  <!-- Подключение скрипта (type="module") -->  <script type="module" src="script.js"></script></body>
 </html>
