@@ -13,8 +13,10 @@
   >
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Подключение Google reCAPTCHA (обязательно для капчи) -->
+  <!-- Подключение Google reCAPTCHA -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- Подключение Telegram Web Apps -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <!-- Фиксированное меню -->
@@ -24,7 +26,7 @@
       <li><a href="#applications">Заявки</a></li>
     </ul>
     <div id="authContainer">
-      <button id="loginButton" class="auth-button">Войти</button>
+      <button id="loginButton" class="auth-button">Войти через Telegram</button>
       <button id="logoutButton" class="auth-button" style="display: none;">Выйти</button>
     </div>
   </nav>
@@ -33,7 +35,7 @@
   <header>
     <div class="header-content">
       <h1>Burgundy Waterfall</h1>
-      <p>заходите к нам, за актив админы будут целовать вам пяточки)</p>
+      <p id="userWelcome">Загрузка данных...</p>
     </div>
   </header>
 
@@ -45,7 +47,6 @@
       <ul id="rulesList">
         <li class="rule-item"><p>Загрузка правил...</p></li>
       </ul>
-      <!-- Блок для добавления нового правила (только для админа) -->
       <div id="addRuleContainer" style="margin-top: 20px; display: none;">
         <input 
           type="text" 
@@ -77,16 +78,15 @@
           required 
           placeholder="Укажите историю персонажа"
         >
-        <!-- Google reCAPTCHA -->
         <div class="g-recaptcha" data-sitekey="6Ld30MsqAAAAAGqA2cNks7A9wrUHqVO16vB3dVQF"></div>
         <button type="submit">Отправить заявку</button>
       </form>
       <div class="applications-container" id="applicationsContainer">
-        <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Ожидающие заявки</h2>
+        <h2>Ожидающие заявки</h2>
         <div id="pendingApplications"></div>
       </div>
       <div class="applications-container" id="approvedContainer">
-        <h2 style="font-size:1.8rem; margin-bottom:15px; color:#D4AF37;">Одобренные заявки</h2>
+        <h2>Одобренные заявки</h2>
         <div id="approvedApplications"></div>
       </div>
     </section>
@@ -96,21 +96,33 @@
     <p>&copy; 2024 Burgundy Waterfall. Все права защищены.</p>
   </footer>
 
-  <!-- Модальное окно для авторизации админа -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" id="closeModal">&times;</span>
-      <h2 style="color:#D4AF37; margin-bottom:15px; text-align:center;">Админ Вход</h2>
-      <input type="email" id="adminEmail" placeholder="Email" required>
-      <input type="password" id="adminPassword" placeholder="Пароль" required>
-      <button id="modalLoginButton">Войти</button>
-    </div>
-  </div>
-
   <!-- Snackbar для уведомлений -->
   <div id="snackbar"></div>
 
-  <!-- Подключение скрипта (type="module") -->
-  <script type="module" src="script.js"></script>
+  <!-- Подключение Telegram Web Apps API -->
+  <script>
+    // Подключаем Telegram Web App API
+    let tg = window.Telegram.WebApp;
+    tg.expand(); // Разворачивает WebView на весь экран
+
+    // Получаем данные пользователя
+    let user = tg.initDataUnsafe?.user;
+    if (user) {
+        document.getElementById("userWelcome").innerHTML = `Привет, ${user.first_name}!`;
+    } else {
+        document.getElementById("userWelcome").innerHTML = "Добро пожаловать!";
+    }
+
+    // Кнопка входа через Telegram
+    document.getElementById("loginButton").addEventListener("click", function() {
+        if (user) {
+            alert(`Вы уже вошли как ${user.first_name}`);
+        } else {
+            alert("Авторизация доступна только через Telegram Web App");
+        }
+    });
+
+  </script>
+
 </body>
 </html>
